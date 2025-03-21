@@ -1,13 +1,12 @@
 from __future__ import annotations
 
 import numbers
-
 from functools import reduce
 
 import numpy as np
 import pandas as pd
-from sympy import lambdify
 from scipy import interpolate, ndimage, stats
+from sympy import lambdify
 
 from dt_model.symbols.constraint import Constraint
 from dt_model.symbols.context_variable import ContextVariable
@@ -17,13 +16,13 @@ from dt_model.symbols.presence_variable import PresenceVariable
 
 class Model:
     def __init__(
-            self,
-            name,
-            cvs: list[ContextVariable],
-            pvs: list[PresenceVariable],
-            indexes: list[Index],
-            capacities: list[Index],
-            constraints: list[Constraint],
+        self,
+        name,
+        cvs: list[ContextVariable],
+        pvs: list[PresenceVariable],
+        indexes: list[Index],
+        capacities: list[Index],
+        constraints: list[Constraint],
     ) -> None:
         self.name = name
         self.cvs = cvs
@@ -93,8 +92,9 @@ class Model:
         grid = self.grid
         field = self.field
 
-        return field.sum() * reduce(lambda x, y: x * y,
-                                    [axis.max() / (axis.size - 1) + 1 for axis in list(grid.values())])
+        return field.sum() * reduce(
+            lambda x, y: x * y, [axis.max() / (axis.size - 1) + 1 for axis in list(grid.values())]
+        )
 
     # TODO: change API - order of presence variables
     def compute_sustainability_index(self, presences: list) -> float:
@@ -102,8 +102,7 @@ class Model:
         grid = self.grid
         field = self.field
         # TODO: fill value
-        index = interpolate.interpn(grid.values(), field, np.array(presences),
-                                    bounds_error=False, fill_value=0.0)
+        index = interpolate.interpn(grid.values(), field, np.array(presences), bounds_error=False, fill_value=0.0)
         return np.mean(index)
 
     def compute_sustainability_index_per_constraint(self, presences: list) -> dict:
@@ -113,8 +112,9 @@ class Model:
         # TODO: fill value
         indexes = {}
         for c in self.constraints:
-            index = interpolate.interpn(grid.values(), field_elements[c], np.array(presences),
-                                        bounds_error=False, fill_value=0.0)
+            index = interpolate.interpn(
+                grid.values(), field_elements[c], np.array(presences), bounds_error=False, fill_value=0.0
+            )
             indexes[c] = np.mean(index)
         return indexes
 
@@ -125,8 +125,12 @@ class Model:
         modal_lines = {}
         for c in self.constraints:
             fe = field_elements[c]
-            matrix = (fe <= 0.5) & ((ndimage.shift(fe, (0, 1)) > 0.5) | (ndimage.shift(fe, (0, -1)) > 0.5) |
-                                    (ndimage.shift(fe, (1, 0)) > 0.5) | (ndimage.shift(fe, (-1, 0)) > 0.5))
+            matrix = (fe <= 0.5) & (
+                (ndimage.shift(fe, (0, 1)) > 0.5)
+                | (ndimage.shift(fe, (0, -1)) > 0.5)
+                | (ndimage.shift(fe, (1, 0)) > 0.5)
+                | (ndimage.shift(fe, (-1, 0)) > 0.5)
+            )
             (yi, xi) = np.nonzero(matrix)
 
             # TODO: decide whether two regressions are really necessary
@@ -141,8 +145,10 @@ class Model:
             except ValueError:
                 pass
 
-            # TODO(pistore,bassosimone): find a better way to represent the lines (at the moment, we need to encode the endopoints
-            # TODO(pistore,bassosimone): even before we implement the previous TODO, avoid hardcoding of line length (10000)
+            # TODO(pistore,bassosimone): find a better way to represent
+            # the lines (at the moment, we need to encode the endopoints
+            # TODO(pistore,bassosimone): even before we implement the
+            # previous TODO, avoid hardcoding of line length (10000)
 
             def __vertical(regr) -> tuple[tuple[float, float], tuple[float, float]]:
                 """Logic for computing the points with vertical regression"""
@@ -200,8 +206,12 @@ class Model:
                     new_capacities.append(capacity)
         new_constraints = []
         for constraint in self.constraints:
-            new_constraints.append(Constraint(constraint.usage.subs(change_indexes),
-                                              constraint.capacity.subs(change_capacities),
-                                              group=constraint.group, name=constraint.name,
-                                              ))
+            new_constraints.append(
+                Constraint(
+                    constraint.usage.subs(change_indexes),
+                    constraint.capacity.subs(change_capacities),
+                    group=constraint.group,
+                    name=constraint.name,
+                )
+            )
         return Model(new_name, self.cvs, self.pvs, new_indexes, new_capacities, new_constraints)
