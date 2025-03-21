@@ -158,12 +158,8 @@ def test_multi_clause_where():
     plan = linearize.forest(node)
 
     # Test data
-    cond1_val = np.array(
-        [[True, False, False], [False, True, False], [False, False, True]]
-    )
-    cond2_val = np.array(
-        [[False, True, False], [True, False, False], [False, True, False]]
-    )
+    cond1_val = np.array([[True, False, False], [False, True, False], [False, False, True]])
+    cond2_val = np.array([[False, True, False], [True, False, False], [False, True, False]])
     expected = np.select([cond1_val, cond2_val], [1.0, 2.0], default=0.0)
 
     # Evaluate with executor
@@ -460,7 +456,7 @@ def test_state_value_access():
     # Create a node and a state
     x = graph.placeholder("x")
     y = graph.constant(2.0)
-    z = graph.add(x, y)
+    graph.add(x, y)
 
     state = executor.State({x: np.array([1.0, 2.0, 3.0])})
 
@@ -635,9 +631,7 @@ def test_axis_operations():
     with pytest.raises(ValueError):  # NumPy raises ValueError for invalid axes
         # Create a valid node type but with invalid axis
         # Note: x is only 2D, so axis=5 is invalid
-        invalid_axis_node = graph.reduce_sum(
-            x, axis=5
-        )
+        invalid_axis_node = graph.reduce_sum(x, axis=5)
         invalid_plan = linearize.forest(invalid_axis_node)
         invalid_state = executor.State({x: x_val})
 
@@ -656,7 +650,7 @@ def test_state_post_init_tracing(capsys):
     y_val = np.array([4.0, 5.0, 6.0])
 
     # Create state with tracing flag
-    state = executor.State({x: x_val, y: y_val}, flags=graph.NODE_FLAG_TRACE)
+    executor.State({x: x_val, y: y_val}, flags=graph.NODE_FLAG_TRACE)
 
     # Check that tracing output was generated during initialization
     captured = capsys.readouterr()
