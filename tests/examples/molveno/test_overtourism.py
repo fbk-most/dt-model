@@ -3,7 +3,6 @@
 import random
 
 import numpy as np
-from sympy import Symbol
 
 from dt_model import Constraint, ContextVariable
 from dt_model.examples.molveno.overtourism import (
@@ -15,6 +14,7 @@ from dt_model.examples.molveno.overtourism import (
     PV_excursionists,
     PV_tourists,
 )
+from dt_model.internal.sympyke import Symbol
 
 
 def compare_constraint_results(got: dict[Constraint, np.ndarray], expect: dict[str, np.ndarray]) -> list[str]:
